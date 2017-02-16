@@ -197,11 +197,11 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             graph= JPWordsToGraph.getGraph();
             int s=jCBsolutions.getSelectedIndex();
             jCBsolutions.setModel(new DefaultComboBoxModel(JPWordsToGraph.getSolutions()));
-            jCBsolutions.setSelectedIndex(s);
+            jCBsolutions.setSelectedIndex(s==-1?0:s);
             s=jCBtime.getSelectedIndex();
             ltt=JPWordsToGraph.getTimeTextList();
             jCBtime.setModel(new DefaultComboBoxModel(ltt));
-            jCBtime.setSelectedIndex(s);
+            jCBtime.setSelectedIndex(s==-1?0:s);
         }
         updateTabel();
     }//GEN-LAST:event_jBUpdateActionPerformed
