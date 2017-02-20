@@ -60,7 +60,7 @@ public class TimeText implements Serializable{
     @Override
     public String toString() {
         String time = getTimeString();
-        if(!text.endsWith("")){
+        if(!text.equals("")){
             time+=" -> ";
             time+=text;
         }

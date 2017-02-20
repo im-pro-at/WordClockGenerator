@@ -7,17 +7,17 @@ package wordclockgenerator;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Point;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,6 +64,7 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
         jCBfill = new javax.swing.JComboBox();
         jLabel2 = new javax.swing.JLabel();
         jCBtime = new javax.swing.JComboBox();
+        jBExport = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTresult = new javax.swing.JTable(){
             @Override
@@ -75,7 +76,6 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
 
             }
         };
-        jBExport = new javax.swing.JButton();
 
         jBUpdate.setText("Update");
         jBUpdate.addActionListener(new java.awt.event.ActionListener() {
@@ -111,6 +111,13 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             }
         });
 
+        jBExport.setText("Export");
+        jBExport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jBExportActionPerformed(evt);
+            }
+        });
+
         jTresult.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
         jTresult.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -126,13 +133,6 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
         jTresult.setEnabled(false);
         jScrollPane1.setViewportView(jTresult);
 
-        jBExport.setText("Export");
-        jBExport.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jBExportActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -140,7 +140,7 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 909, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 919, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jBUpdate)
@@ -152,13 +152,16 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                             .addComponent(jLabel2))
                         .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jCBfill, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jCBtime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jCBsolutions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
                                 .addComponent(jLInfos)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(156, 156, 156)
+                        .addComponent(jCBfill, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 682, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -168,7 +171,8 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jBUpdate)
                     .addComponent(jLabel1)
-                    .addComponent(jCBsolutions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jCBsolutions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLInfos))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jBExport)
@@ -179,12 +183,8 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                     .addComponent(jLabel2)
                     .addComponent(jCBtime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 455, Short.MAX_VALUE)
                 .addGap(18, 18, 18))
-            .addGroup(layout.createSequentialGroup()
-                .addGap(15, 15, 15)
-                .addComponent(jLInfos)
-                .addGap(554, 554, 554))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -251,29 +251,55 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                 }
                 file.write(ln);                
             }
+            file.write(ln); //End of sequence make                
+            file.write(ln); //End of sequence make                
             
-            if(graph.nodes.size()-1>(256-2)){
-                file.write("ERROR: More then 254 different words! Cannot generate Data Structure!"+ln);
+            //Generate List of all Words:
+            file.write("//Word [0]=Startpos [1]=lengh of LED index"+ln);
+            HashMap<TimeText,ArrayList<Integer>> words= new HashMap<>();
+            int cwords=0;
+            for(JPWordsToGraph.Node n : graph.nodes){
+                //Find all subwords
+                HashMap<String,ArrayList<TimeText>> subwords = new HashMap<>();
+                
+                for(Map.Entry<TimeText,String> e: n.mtt.entrySet()){
+                    if(!subwords.containsKey(e.getValue())){
+                        subwords.put(e.getValue(), new ArrayList<>());
+                    }
+                    subwords.get(e.getValue()).add(e.getKey());
+                }
+                
+                int h=resultnode.get(n).x;
+                int w=resultnode.get(n).y;
+                        
+                for(Map.Entry<String,ArrayList<TimeText>> e : subwords.entrySet()){
+                    for(TimeText tt : e.getValue()){
+                        if(!words.containsKey(tt)){
+                            words.put(tt, new ArrayList<>());
+                        }
+                        words.get(tt).add(cwords);
+                    }
+                    file.write("//Word: \""+e.getKey()+"\""+ln);
+                    file.write("const uint16_t word_"+cwords+"[] PROGMEM = { ");
+                    file.write((lw*h+w+n.text.indexOf(e.getKey()))+", ");
+                    file.write(e.getKey().length()+" }"+ln);
+                    
+                    cwords++;                    
+                }
+            }
+
+            if(cwords-1>(256-2)){
+                file.write("ERROR: More then 254 different words! Cannot generate data structure!"+ln);
                 return;
             }
             
-            //Generate List of all Words(Nods):
-            for(int i=0;i<graph.nodes.size();i++){
-                file.write("//Word: \""+graph.nodes.get(i).text+"\""+ln);
-                file.write("const uint16_t word_"+i+"[] PROGMEM = { ");
-                for(int j=0;j<lh*lw;j++){
-                    if(resultnode[j/lw][j%lw] == graph.nodes.get(i)){
-                        file.write(j+", ");
-                    }
-                }                
-                file.write("0xFFFF };"+ln); //End of sequence make                
-            }
+
             //Generate Words(Nods) Table:
             file.write("//Word Table: "+ln);
             file.write("const uint16_t* const word_table[] PROGMEM = { ");
-            for(int i=0;i<graph.nodes.size();i++){
+            for(int i=0;i<cwords;i++){
                 String s="word_"+i;
-                if(i<(graph.nodes.size()-1)) {
+                if(i<(cwords-1)) {
                     s+=", ";
                 }
                 file.write(s);
@@ -283,30 +309,32 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             
             
             //Find all Different patterns:
-            HashSet<String> patternset = new HashSet<>();
+            HashMap<String,ArrayList<TimeText>> patternttmap = new HashMap<>();
             HashMap<TimeText,String> ttpatternmap = new HashMap<>();
             for(TimeText tt: ltt){
+                char[] pattern= new char[cwords];
+                Arrays.fill(pattern, '0');
                 //Generate pattern:
-                String pattern="";
-                for(int i=0;i<graph.nodes.size();i++){
-                    pattern+=graph.nodes.get(i).ltt.contains(tt)?"1":"0";
+                for(Integer i : words.get(tt)){
+                    pattern[i]='1';
                 }
-                if(!patternset.contains(pattern)){
-                    patternset.add(pattern);
+                if(!patternttmap.containsKey(String.valueOf(pattern))){
+                    patternttmap.put(String.valueOf(pattern), new ArrayList<>());
                 }
-                ttpatternmap.put(tt, pattern);
+                patternttmap.get(String.valueOf(pattern)).add(tt);
+                ttpatternmap.put(tt, String.valueOf(pattern));
             }
-            String[] petternlist = patternset.toArray(new String[0]);
+            String[] petternlist = patternttmap.keySet().toArray(new String[0]);
             
             //Generate word list for all Patterns:
             for(int i=0;i<petternlist.length;i++){
                 file.write("//Pattern: \"");
-                for(int j=0;j<graph.nodes.size();j++){
-                    if(petternlist[i].charAt(j)=='1'){
-                        file.write(graph.nodes.get(j).text+" ");                
-                    }
+                file.write(patternttmap.get(petternlist[i]).get(0).getText());
+                file.write("\" ");
+                for(TimeText tt : patternttmap.get(petternlist[i])){
+                    file.write(tt.getTimeString()+" ");                
                 }
-                file.write("\""+ln);
+                file.write(""+ln);
                 file.write("const uint8_t pattern_"+i+"[] PROGMEM = { ");
                 for(int j=0;j<graph.nodes.size();j++){
                     if(petternlist[i].charAt(j)=='1'){
@@ -377,7 +405,7 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
     private javax.swing.JTable jTresult;
     // End of variables declaration//GEN-END:variables
 
-    JPWordsToGraph.Node[][] resultnode=null;
+    HashMap<JPWordsToGraph.Node, Point> resultnode = null;
     ArrayList<TimeText>[][] resulttt=null;
     Character[][] resultmatrix=null;
     private Color getColor(int row, int column){
@@ -395,6 +423,7 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
         Random rand= new Random();
         if(jCBsolutions.getSelectedItem()!=null){
             JPWordsToGraph.Solution s= (JPWordsToGraph.Solution)jCBsolutions.getSelectedItem();
+            s.debugPrint();
             Character[] fillLetters= getFillLetters();
 
             int ntl=0;
@@ -410,57 +439,68 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             
             Character[][] charmatrix= new Character[s.h][s.w];
             ArrayList<TimeText>[][] ttmatrix= new ArrayList[s.h][s.w];
-            JPWordsToGraph.Node[][] nodematrix= new JPWordsToGraph.Node[s.h][s.w];
+            for(int h=0;h<s.h;h++){
+                for(int w=0;w<s.w;w++){
+                    ttmatrix[h][w]= new ArrayList<>();
+                }
+            }
+            HashMap<JPWordsToGraph.Node,Point> nodematrix= new HashMap<>();
             for(int h=0;h<s.h;h++){
                 //Calc length
-                HashSet<JPWordsToGraph.Node> needspase= new HashSet<>();
                 int length=0;
-                JPWordsToGraph.Node lastnode=null;
-                for(JPWordsToGraph.Node n: s.list[h]){
-                    length+=n.text.length();
-                    if(lastnode!=null){
-                        for(JPWordsToGraph.Edge e : lastnode.leo){
-                            if(e.e==n){
-                                //Need space 
-                                needspase.add(n);
-                                length++;
-                                break;
-                            }
-                        }
+                int gaps=1;
+                for(int i=0;i<s.list[h].size();i++){
+                    length+=s.list[h].get(i).text.length()-s.overlap[h].get(i);                    
+                    if(s.overlap[h].get(i)<=0){
+                        gaps++;
                     }
-                    lastnode=n;
                 }
             
                 int randspaces=s.w-length;
-                float prob= (float)randspaces/(float)(s.list[h].size()+1);
+                float prob= (float)randspaces/(float)(gaps);
                 int staticspaces = (int)Math.floor(prob);
                 randspaces=randspaces-staticspaces*(s.list[h].size()+1);
                 prob=prob-staticspaces;
                 
                 int w=0;
-                for(JPWordsToGraph.Node n: s.list[h]){
-                    int nspaces=staticspaces;
-                    if(needspase.contains(n)){
-                        nspaces++;
+                for(int i=0;i<s.list[h].size();i++){
+                    if(s.overlap[h].get(i)<=0){
+                        int nspaces=staticspaces;
+                        if(s.overlap[h].get(i)==-1){
+                            nspaces++;
+                        }
+                        if(rand.nextDouble()<prob && randspaces>0){
+                            randspaces--;
+                            nspaces++;
+                        }
+                        for(int j=0;j<nspaces;j++){
+                            charmatrix[h][w]=fillLetters[rand.nextInt(fillLetters.length)];
+                            w++;
+                        }
                     }
-                    if(rand.nextDouble()<prob && randspaces>0){
-                        randspaces--;
-                        nspaces++;
+                    else{
+                        w-=s.overlap[h].get(i); //Words overlap!
                     }
-                    for(int i=0;i<nspaces;i++){
-                        ttmatrix[h][w]= new ArrayList<>();
-                        charmatrix[h][w]=fillLetters[rand.nextInt(fillLetters.length)];
-                        w++;
+                    //Generate TimeText Char index map 
+                    ArrayList<TimeText>[] ttcharmap= new ArrayList[s.list[h].get(i).text.length()];
+                    for(int j =0;j<s.list[h].get(i).text.length();j++){
+                        ttcharmap[j]= new ArrayList<>();
                     }
-                    for(int i=0;i<n.text.length();i++){
-                        charmatrix[h][w]=n.text.charAt(i);
-                        nodematrix[h][w]=n;
-                        ttmatrix[h][w]=n.ltt;
+                    for(Map.Entry<TimeText,String> e: s.list[h].get(i).mtt.entrySet()){
+                        int pos=s.list[h].get(i).text.indexOf(e.getValue());
+                        for(int j=pos;j<pos+e.getValue().length();j++){
+                            ttcharmap[j].add(e.getKey());
+                        }
+                    }
+                    nodematrix.put(s.list[h].get(i), new Point(h, w));
+                    
+                    for(int j=0;j<s.list[h].get(i).text.length();j++){
+                        charmatrix[h][w]=s.list[h].get(i).text.charAt(j);
+                        ttmatrix[h][w].addAll(ttcharmap[j]);
                         w++;
                     }
                 }
                 for(;w<s.w;w++){
-                    ttmatrix[h][w]= new ArrayList<>();
                     charmatrix[h][w]=fillLetters[rand.nextInt(fillLetters.length)];
                 }
                 

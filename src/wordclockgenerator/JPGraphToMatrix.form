@@ -19,7 +19,7 @@
           <Group type="102" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jScrollPane1" pref="909" max="32767" attributes="0"/>
+                  <Component id="jScrollPane1" pref="919" max="32767" attributes="0"/>
                   <Group type="102" alignment="0" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="jBUpdate" min="-2" max="-2" attributes="0"/>
@@ -33,7 +33,6 @@
                       </Group>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jCBfill" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="jCBtime" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jCBsolutions" min="-2" max="-2" attributes="0"/>
@@ -42,6 +41,11 @@
                           </Group>
                       </Group>
                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace min="156" pref="156" max="-2" attributes="0"/>
+                      <Component id="jCBfill" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="682" max="32767" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -56,6 +60,7 @@
                   <Component id="jBUpdate" alignment="2" min="-2" max="-2" attributes="0"/>
                   <Component id="jLabel1" alignment="2" min="-2" max="-2" attributes="0"/>
                   <Component id="jCBsolutions" alignment="2" min="-2" max="-2" attributes="0"/>
+                  <Component id="jLInfos" alignment="2" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="2" attributes="0">
@@ -69,13 +74,8 @@
                   <Component id="jCBtime" alignment="2" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace type="separate" max="-2" attributes="0"/>
-              <Component id="jScrollPane1" max="32767" attributes="0"/>
+              <Component id="jScrollPane1" pref="455" max="32767" attributes="0"/>
               <EmptySpace type="separate" max="-2" attributes="0"/>
-          </Group>
-          <Group type="102" attributes="0">
-              <EmptySpace min="15" pref="15" max="-2" attributes="0"/>
-              <Component id="jLInfos" min="-2" max="-2" attributes="0"/>
-              <EmptySpace min="554" pref="554" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -144,6 +144,14 @@
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCBtimeActionPerformed"/>
       </Events>
     </Component>
+    <Component class="javax.swing.JButton" name="jBExport">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Export"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jBExportActionPerformed"/>
+      </Events>
+    </Component>
     <Container class="javax.swing.JScrollPane" name="jScrollPane1">
       <AuxValues>
         <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
@@ -177,13 +185,5 @@
         </Component>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JButton" name="jBExport">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="Export"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jBExportActionPerformed"/>
-      </Events>
-    </Component>
   </SubComponents>
 </Form>

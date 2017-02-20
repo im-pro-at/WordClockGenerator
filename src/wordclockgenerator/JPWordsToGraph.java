@@ -17,14 +17,12 @@ import java.awt.Dimension;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.Stack;
 import javax.swing.GroupLayout;
 
@@ -56,6 +54,7 @@ public class JPWordsToGraph extends javax.swing.JPanel {
         int w;
         int h;
         ArrayList<Node>[] list;  
+        ArrayList<Integer>[] overlap;  
 
         @Override
         public String toString() {
@@ -66,9 +65,9 @@ public class JPWordsToGraph extends javax.swing.JPanel {
             System.out.println("Solution "+this+": ");
             for(int i=0;i<h;i++){
                 String s="";
-                for(Node n: list[i])
-                    s+=n.text+" ";
-                
+                for(int j=0;j<list[i].size();j++){
+                    s+=" ("+ (0-overlap[i].get(j)) +") "+list[i].get(j).text;
+                }
                 System.out.println("  "+s);
             }
         }
@@ -77,8 +76,9 @@ public class JPWordsToGraph extends javax.swing.JPanel {
     
     public static class Node{        
         HashSet<Edge> lei = new HashSet<>();        
-        HashSet<Edge> leo = new HashSet<>();        
-        ArrayList<TimeText> ltt=new ArrayList<>();
+        HashSet<Edge> leo = new HashSet<>();     
+        Map<TimeText,String> mtt= new HashMap<>();
+
         String text="";
 
         @Override
@@ -107,17 +107,7 @@ public class JPWordsToGraph extends javax.swing.JPanel {
         
         @Override
         public String toString() {
-            String time="";
-            for(TimeText tt : ltt)
-                time+=tt.getTimeString()+"_";
-            return time+"_"+s.toString()+e.toString();
-        }
-        
-        public String getTimes(){
-            String time="";
-            for(TimeText tt : ltt)
-                time+=tt.getTimeString()+"_";
-            return time;
+            return s.toString()+e.toString();
         }
     }
     
@@ -137,7 +127,7 @@ public class JPWordsToGraph extends javax.swing.JPanel {
             for(Node n : this.nodes){
                 Node cn= new Node(n.text);
                 clist.put(n, cn);
-                cn.ltt.addAll(n.ltt);
+                cn.mtt= new HashMap<>(n.mtt);
                 g.nodes.add(cn);
             }
             for(Edge e :this.start.leo){
@@ -324,13 +314,13 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                         for(Edge e: last.leo){
                             if(e.e.text.equals(word)){
                                 temp=e.e;
-                                temp.ltt.add(tt);
+                                temp.mtt.put(tt, word);
                                 break;
                             }
                         }
                         if(temp==null){
                             temp= new Node();
-                            temp.ltt.add(tt);
+                            temp.mtt.put(tt, word);
                             g.nodes.add(temp);
                             temp.text=word;
                             Edge e= new Edge(last,temp);
@@ -383,85 +373,110 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                                 nsetdelta=temp;
                             }
 
-                            //Find matches:
-                            for(Node ns:nsetstart){
-                                for(Node nd:nsetdelta){
-                                    if(ns!=nd && ns.text.equals(nd.text)){
-                                        //Test if there will be a cylce after the merge => is nd reachable from ns:
-                                        HashSet<Node> ndone= new HashSet<>();
-                                        Stack<Node> ntodo=new Stack<>();
-                                        ntodo.push(ns);
+                            Node ns=null, nd=null;
 
-                                        while(!ntodo.empty()){
-                                            Node n=ntodo.pop();
-                                            if(!ndone.contains(n)){
-                                                ndone.add(n);
-                                                for(Edge e:n.leo){
-                                                    ntodo.push(e.e);
-                                                }
-                                            }
-                                        }
-
-                                        if(ndone.contains(nd)){
-                                            //Cycle
-                                            continue;
-                                        }
-
-                                        //No cylce matche! merge ns and nd ==> delete nd
-                                        //Add edges from nd to ns
-                                        for(Edge nd_eo:nd.leo){
-                                            nd_eo.s=ns;
-                                            nd_eo.e.lei.remove(nd_eo);                                    
-                                            boolean exists=false;
-                                            for(Edge ns_eo:ns.leo){
-                                                if(ns_eo.e==nd_eo.e){
-                                                    //Edge exits
-                                                    exists=true;
-                                                    break;                                                    
-                                                }
-                                            }                                            
-                                            if(!exists){
-                                                //readd Edge
-                                                nd_eo.s.leo.add(nd_eo);
-                                                nd_eo.e.lei.add(nd_eo);
-                                            }
-                                        }
-                                        for(Edge nd_ei:nd.lei){
-                                            nd_ei.e=ns;
-                                            nd_ei.s.leo.remove(nd_ei);                                    
-                                            boolean exists=false;
-                                            for(Edge ns_ei:ns.lei){
-                                                if(ns_ei.s==nd_ei.s){
-                                                    //Edge exits
-                                                    exists=true;
-                                                    break;                                                    
-                                                }
-                                            }                                            
-                                            if(!exists){
-                                                //readd Edge
-                                                nd_ei.s.leo.add(nd_ei);
-                                                nd_ei.e.lei.add(nd_ei);
-                                            }
-                                        }
-                                        //transfer tts
-                                        for(TimeText tt : nd.ltt){
-                                            ns.ltt.add(tt);
-                                        }
-                                            
-                                        //remode nd
-                                        g.nodes.remove(nd);
-                                        
-                                        this.publish(g.cloneGraph());
-
-                                        Thread.sleep(10);
-                                        
-                                        change=true;
-                                        break;                                    
-
+                            //Find total matches:
+                            for(Node tns:nsetstart){
+                                for(Node tnd:nsetdelta){
+                                    if(tns!=tnd && tns.text.equals(tnd.text)){
+                                        ns=tns;
+                                        nd=tnd;
+                                        break;
                                     }
                                 }
-                                if(change) break;
+                                if(ns!=null) break;
                             }
+
+                            //Find part matches:
+                            for(Node tns:nsetstart){
+                                for(Node tnd:nsetdelta){
+                                    if(tns!=tnd && tns.text.indexOf(tnd.text)!=-1){
+                                        ns=tns;
+                                        nd=tnd;
+                                        break;
+                                    }
+                                }
+                                if(ns!=null) break;
+                            }
+                            
+                            
+                            if(ns!=null){
+                                //Test if there will be a cylce after the merge => is nd reachable from ns:
+                                HashSet<Node> ndone= new HashSet<>();
+                                Stack<Node> ntodo=new Stack<>();
+                                ntodo.push(ns);
+
+                                while(!ntodo.empty()){
+                                    Node n=ntodo.pop();
+                                    if(!ndone.contains(n)){
+                                        ndone.add(n);
+                                        for(Edge e:n.leo){
+                                            ntodo.push(e.e);
+                                        }
+                                    }
+                                }
+
+                                if(ndone.contains(nd)){
+                                    //Cycle
+                                    continue;
+                                }
+
+                                //No cylce matche! merge ns and nd ==> delete nd
+                                //Add edges from nd to ns
+                                for(Edge nd_eo:nd.leo){
+                                    nd_eo.s=ns;
+                                    nd_eo.e.lei.remove(nd_eo);                                    
+                                    boolean exists=false;
+                                    for(Edge ns_eo:ns.leo){
+                                        if(ns_eo.e==nd_eo.e){
+                                            //Edge exits
+                                            exists=true;
+                                            break;                                                    
+                                        }
+                                    }                                            
+                                    if(!exists){
+                                        //readd Edge
+                                        nd_eo.s.leo.add(nd_eo);
+                                        nd_eo.e.lei.add(nd_eo);
+                                    }
+                                }
+                                for(Edge nd_ei:nd.lei){
+                                    nd_ei.e=ns;
+                                    nd_ei.s.leo.remove(nd_ei);                                    
+                                    boolean exists=false;
+                                    for(Edge ns_ei:ns.lei){
+                                        if(ns_ei.s==nd_ei.s){
+                                            //Edge exits
+                                            exists=true;
+                                            break;                                                    
+                                        }
+                                    }                                            
+                                    if(!exists){
+                                        //readd Edge
+                                        nd_ei.s.leo.add(nd_ei);
+                                        nd_ei.e.lei.add(nd_ei);
+                                    }
+                                }
+                                
+                                
+                                //transfer tts
+                                for(Map.Entry<TimeText,String> e : nd.mtt.entrySet()){
+                                    ns.mtt.put(e.getKey(),e.getValue());
+                                }
+
+                                //remode nd
+                                g.nodes.remove(nd);
+
+                                this.publish(g.cloneGraph());
+
+                                Thread.sleep(10);
+
+                                change=true;
+                                break;                                    
+
+                            }
+                            
+                            
                             if(change) break;
                         }
                         if(change) break;
@@ -472,6 +487,11 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                 setProgress(50,"Finding Solutions");
                 ArrayList<Solution> solutions= new ArrayList<>();
                 
+                if(g.nodes.size()<2){
+                    setProgress(50,"Graph has less than two node cannot find a mapping!");                    
+                    return g;
+                }
+                
                 int minwidth=0;
                 int cletters=0;
                 for(Node n:g.nodes){
@@ -479,100 +499,117 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                     cletters+=n.text.length()+1;
                 }
                 
-                
+                Random rand= new Random(0);
                 for(int w=minwidth;w<cletters;w++){
                     setProgress((int)(50+(50.0*(w-minwidth))/(cletters-minwidth)),"Finding Solutions");
                     boolean doneinoneline=false;
                     for(int h=1;h<g.nodes.size();h++){
                         //init working Graph and make start as done!
-                        HashSet<Node> ndone = new HashSet<>();
-                        ndone.add(g.start);
-
-                        //init solution structure
-                        ArrayList<Node>[] r= new ArrayList[h];
-                        int[] rl= new int[h];
-                        for(int i=0;i<h;i++){
-                            r[i]=new ArrayList<>();
-                            rl[i]=0;
-                        }
+                        HashSet<Node> ndone = null;
+                        
                         int lineindex=0;
-                        
-                        while( (ndone.size()-1) <  g.nodes.size() && lineindex<h){
-                            //Find free nodes to add
-                            ArrayList<Node> nfrees= new ArrayList<>();
-                            for(Node n : g.nodes){
-                                if(!ndone.contains(n)){
-                                    boolean free=true;
-                                    for(Edge e :n.lei){
-                                        if(!ndone.contains(e.s)){
-                                            free=false;
-                                            break;
+                        ArrayList<Node>[] r=null;
+                        ArrayList<Integer>[] ro=null;
+                        for(int itry=0;itry<1000;itry++){
+                            //init solution structure
+                            ndone = new HashSet<>();
+                            ndone.add(g.start);
+                            r= new ArrayList[h];
+                            ro= new ArrayList[h];
+                            int[] rl= new int[h];
+                            for(int i=0;i<h;i++){
+                                r[i]=new ArrayList<>();
+                                ro[i]= new ArrayList<>();
+                                rl[i]=0;
+                            }
+                            lineindex=0;
+
+                            while( (ndone.size()-1) <  g.nodes.size() && lineindex<h){
+                                //Find free nodes to add
+                                ArrayList<Node> nfrees= new ArrayList<>();
+                                for(Node n : g.nodes){
+                                    if(!ndone.contains(n)){
+                                        boolean free=true;
+                                        for(Edge e :n.lei){
+                                            if(!ndone.contains(e.s)){
+                                                free=false;
+                                                break;
+                                            }
+                                        }
+                                        if(free){
+                                            nfrees.add(n);
                                         }
                                     }
-                                    if(free){
-                                        nfrees.add(n);
-                                    }
                                 }
-                            }
-                            
-                            int[] nfreesl= new int[nfrees.size()];
-                            boolean[] needspace= new boolean[nfrees.size()];
-                            
-                            //Calc length after adding the free nodes to the line:
-                            for(int i=0;i<nfrees.size();i++){
-                                nfreesl[i]=rl[lineindex]+nfrees.get(i).text.length();
-                                //Check if space is needed:
-                                if(!r[lineindex].isEmpty()){
-                                    for(Edge e: r[lineindex].get(r[lineindex].size()-1).leo){
-                                        if(e.e==nfrees.get(i)){
-                                            needspace[i]=true;
-                                            nfreesl[i]++;
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            //Decide what to add:
-                            int toadd=-1;                            
-                            int max=0;
-                            for(int i=0;i<nfrees.size();i++){
-                                if(needspace[i]==false && nfreesl[i]<=w){
-                                    if(max<nfrees.get(i).text.length()){
-                                        toadd=i;
-                                        max=nfrees.get(i).text.length();
-                                    }
-                                }
-                            }
-                            if(toadd==-1)
-                            {
-                                //Try to add with space
-                                max=0;
+
+                                int[] nfreesl= new int[nfrees.size()];
+                                int[] nfreeso= new int[nfrees.size()];
+                                //Calc length after adding the free nodes to the line:
                                 for(int i=0;i<nfrees.size();i++){
-                                    if(needspace[i]==true && nfreesl[i]<=w){
-                                        if(max<nfrees.get(i).text.length()){
-                                            toadd=i;
-                                            max=nfrees.get(i).text.length();
+                                    //Check if space is needed:
+                                    boolean needspace=false;
+                                    if(!r[lineindex].isEmpty()){
+                                        for(Edge e: r[lineindex].get(r[lineindex].size()-1).leo){
+                                            if(e.e==nfrees.get(i)){
+                                                needspace=true;
+                                                break;
+                                            }
                                         }
                                     }
+                                    int overlapping=0;
+                                    if(needspace){
+                                        overlapping=-1;
+                                    }
+                                    else{
+                                        if(!r[lineindex].isEmpty()){
+                                            String s1=r[lineindex].get(r[lineindex].size()-1).text;
+                                            String s2=nfrees.get(i).text;
+                                            for(int o=1;o<Math.min(s1.length(), s2.length());o++){
+                                                boolean over=true;
+                                                for(int l=0;l<o;l++){
+                                                    if(s1.charAt(s1.length()-o+l)!=s2.charAt(l)){
+                                                        over=false;
+                                                        break;
+                                                    }
+                                                }
+                                                if(over){
+                                                    overlapping=o;
+                                                }
+                                                else{
+                                                    break;
+                                                }                                                    
+                                            }
+                                        }
+                                    }
+                                    nfreeso[i]=overlapping;
+                                    nfreesl[i]=rl[lineindex]+nfrees.get(i).text.length()-overlapping;
                                 }
+
+                                //What can be add:
+                                ArrayList<Integer> toadd= new ArrayList<>();                            
+                                for(int i=0;i<nfrees.size();i++){
+                                    if(nfreesl[i]<=w){
+                                        toadd.add(i);
+                                    }
+                                }
+
+                                if(toadd.isEmpty()){
+                                    //No node found => line done!
+                                    lineindex++; 
+                                }
+                                else{
+                                    int index= rand.nextInt(toadd.size());
+                                    //add node
+                                    r[lineindex].add(nfrees.get(toadd.get(index)));
+                                    ro[lineindex].add(nfreeso[toadd.get(index)]);
+                                    rl[lineindex]=nfreesl[toadd.get(index)];
+                                    //make node as done
+                                    ndone.add(nfrees.get(toadd.get(index)));
+                                }
+
                             }
-                            
-                            
-                            if(toadd==-1){
-                                //No node found => line done!
-                                lineindex++; 
-                            }
-                            else{
-                                //add node
-                                r[lineindex].add(nfrees.get(toadd));
-                                rl[lineindex]=nfreesl[toadd];
-                                //make node as done
-                                ndone.add(nfrees.get(toadd));
-                                
-                            }
-                            
+                            if((ndone.size()-1) == g.nodes.size()) break; //Has soulution!!!
                         }
-                        
                         //Print solution
                         if((ndone.size()-1) == g.nodes.size())
                         {
@@ -580,6 +617,7 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                             s.h=h;
                             s.w=w;
                             s.list=r;
+                            s.overlap=ro;
                             solutions.add(s);
                         }
                         
@@ -597,6 +635,7 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                 
                 JPWordsToGraph.graph=g;
                 JPWordsToGraph.solutions= solutions.toArray(new Solution[0]);
+                setProgress(100,"Done");                    
                 return g;
             }
 
@@ -604,8 +643,6 @@ public class JPWordsToGraph extends javax.swing.JPanel {
             protected void done(Graph rvalue, Exception ex, boolean canceled) {
                 jTBCalc.setEnabled(true);
                 display(rvalue);
-                jPB.setValue(100);
-                jPB.setString("Done");
             }
 
             @Override
