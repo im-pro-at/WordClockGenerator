@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.Stack;
 import javax.swing.GroupLayout;
 
@@ -94,6 +95,29 @@ public class JPWordsToGraph extends javax.swing.JPanel {
         }
         
         
+        public boolean reachable(Node nreach){
+            if(this==nreach){ //same node?
+                return true;
+            }
+            HashSet<Node> ndone= new HashSet<>();
+            Stack<Node> ntodo=new Stack<>();
+            ntodo.push(this);
+
+            while(!ntodo.empty()){
+                Node n=ntodo.pop();
+                if(!ndone.contains(n)){
+                    if(n==nreach){
+                        return true;
+                    }
+                    ndone.add(n);
+                    for(Edge e:n.leo){
+                        ntodo.push(e.e);
+                    }
+                }
+            }
+            return false;
+        }
+        
         
     }
     public static class Edge{
@@ -149,6 +173,7 @@ public class JPWordsToGraph extends javax.swing.JPanel {
     
     VisualizationViewer<Node,Edge> vv= new VisualizationViewer<>(new FRLayout<>(new DirectedSparseGraph<>()));   
     Graph displaygraph = null;
+    Set<Node> displaymake= null;
     private void display(Graph graph) {
         displaygraph=graph;
         edu.uci.ics.jung.graph.Graph<Node,Edge> g = new DirectedSparseGraph<>();
@@ -201,6 +226,9 @@ public class JPWordsToGraph extends javax.swing.JPanel {
         vv.getRenderContext().setVertexFillPaintTransformer((Node i) -> {
             if(displaygraph==null || i==displaygraph.start || i==displaygraph.end)
                 return Color.BLACK;
+            Set<Node> mark= this.displaymake;
+            if(mark!=null && mark.contains(i))
+                return Color.LIGHT_GRAY;
             return Color.WHITE;
         });
         DefaultModalGraphMouse gm = new DefaultModalGraphMouse();
@@ -296,15 +324,15 @@ public class JPWordsToGraph extends javax.swing.JPanel {
 
                 Graph g = new Graph();
 
-                JPWordsToGraph.ltt= JPTimeToWords.getTimeTextList().toArray(new TimeText[0]);
+                TimeText[] ltt= JPTimeToWords.getTimeTextList().toArray(new TimeText[0]);
                 
                 setProgress(0,"Init Graph..");
                 
                 //Build init graph:
                 int emaxdelta=0;
                 int p=0;
-                for(TimeText tt : JPWordsToGraph.ltt){
-                    setProgress((int)(0+(25.0*(p++))/JPWordsToGraph.ltt.length),"Init Graph..");
+                for(TimeText tt : ltt){
+                    setProgress((int)(0+(25.0*(p++))/ltt.length),"Init Graph..");
                     String[] words= tt.getText().trim().split("\\s+");
                     emaxdelta=Math.max(emaxdelta, words.length);
                     Node last=g.start;
@@ -348,135 +376,153 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                 {
                     setProgress((int)(25+ 25*(1-(float)g.nodes.size()/cnodes)),"Find maching nodes..");
                     change=false;
-                    for(int edelta=0;edelta<emaxdelta;edelta++){
-                        for(int estart=0;estart<emaxdelta-edelta;estart++){
-                            HashSet<Node> nsetstart=new HashSet<>();
-                            nsetstart.add(g.start);
-                            //generate two note sets to compair
-                            for(int i=0;i<estart;i++){
-                                HashSet<Node> temp=new HashSet<>();
-                                for(Node n:nsetstart){
-                                    for(Edge e: n.leo){
-                                        temp.add(e.e);
-                                    }
-                                }
-                                nsetstart=temp;
-                            }
-                            HashSet<Node> nsetdelta=nsetstart;
-                            for(int i=0;i<edelta;i++){
-                                HashSet<Node> temp=new HashSet<>();
-                                for(Node n:nsetdelta){
-                                    for(Edge e: n.leo){
-                                        temp.add(e.e);
-                                    }
-                                }
-                                nsetdelta=temp;
-                            }
-
-                            Node ns=null, nd=null;
-
-                            //Find total matches:
-                            for(Node tns:nsetstart){
-                                for(Node tnd:nsetdelta){
-                                    if(tns!=tnd && tns.text.equals(tnd.text)){
-                                        ns=tns;
-                                        nd=tnd;
-                                        break;
-                                    }
-                                }
-                                if(ns!=null) break;
-                            }
-
-                            //Find part matches:
-                            for(Node tns:nsetstart){
-                                for(Node tnd:nsetdelta){
-                                    if(tns!=tnd && tns.text.indexOf(tnd.text)!=-1){
-                                        ns=tns;
-                                        nd=tnd;
-                                        break;
-                                    }
-                                }
-                                if(ns!=null) break;
-                            }
-                            
-                            
-                            if(ns!=null){
-                                //Test if there will be a cylce after the merge => is nd reachable from ns:
-                                HashSet<Node> ndone= new HashSet<>();
-                                Stack<Node> ntodo=new Stack<>();
-                                ntodo.push(ns);
-
-                                while(!ntodo.empty()){
-                                    Node n=ntodo.pop();
-                                    if(!ndone.contains(n)){
-                                        ndone.add(n);
-                                        for(Edge e:n.leo){
-                                            ntodo.push(e.e);
+                    for(int aechanges=1;aechanges<g.nodes.size();aechanges++){
+                        for(boolean reverse:new boolean[]{false,true}){
+                            for(int edelta=0;edelta<emaxdelta;edelta++){
+                                for(int estart=0;estart<emaxdelta-edelta;estart++){
+                                    HashSet<Node> nsetstart=new HashSet<>();
+                                    nsetstart.add(g.start);
+                                    //generate two note sets to compair
+                                    for(int i=0;i<estart;i++){
+                                        HashSet<Node> temp=new HashSet<>();
+                                        for(Node n:nsetstart){
+                                            for(Edge e: n.leo){
+                                                temp.add(e.e);
+                                            }
                                         }
+                                        nsetstart=temp;
                                     }
-                                }
-
-                                if(ndone.contains(nd)){
-                                    //Cycle
-                                    continue;
-                                }
-
-                                //No cylce matche! merge ns and nd ==> delete nd
-                                //Add edges from nd to ns
-                                for(Edge nd_eo:nd.leo){
-                                    nd_eo.s=ns;
-                                    nd_eo.e.lei.remove(nd_eo);                                    
-                                    boolean exists=false;
-                                    for(Edge ns_eo:ns.leo){
-                                        if(ns_eo.e==nd_eo.e){
-                                            //Edge exits
-                                            exists=true;
-                                            break;                                                    
+                                    HashSet<Node> nsetdelta=nsetstart;
+                                    for(int i=0;i<edelta;i++){
+                                        HashSet<Node> temp=new HashSet<>();
+                                        for(Node n:nsetdelta){
+                                            for(Edge e: n.leo){
+                                                temp.add(e.e);
+                                            }
                                         }
-                                    }                                            
-                                    if(!exists){
-                                        //readd Edge
-                                        nd_eo.s.leo.add(nd_eo);
-                                        nd_eo.e.lei.add(nd_eo);
+                                        nsetdelta=temp;
                                     }
-                                }
-                                for(Edge nd_ei:nd.lei){
-                                    nd_ei.e=ns;
-                                    nd_ei.s.leo.remove(nd_ei);                                    
-                                    boolean exists=false;
-                                    for(Edge ns_ei:ns.lei){
-                                        if(ns_ei.s==nd_ei.s){
-                                            //Edge exits
-                                            exists=true;
-                                            break;                                                    
+
+                                    nsetstart.remove(g.start);
+                                    nsetstart.remove(g.end);
+                                    nsetdelta.remove(g.start);
+                                    nsetdelta.remove(g.end);
+
+                                    Node ns=null, nd=null;
+
+                                    //Find matches:
+                                    for(Node tns:nsetstart){
+                                        for(Node tnd:nsetdelta){
+                                            if(reverse){
+                                                Node t=tns;
+                                                tns=tnd;
+                                                tnd=t;
+                                            }
+                                            if(tns.text.contains(tnd.text)){
+                                                //Will there be a cicle after joining ns and nd?
+                                                if(tns.reachable(tnd) || tnd.reachable(tns)){
+                                                    continue;
+                                                }
+                                                //Will there be more new ages then allowed:
+                                                int anew=0;
+                                                for(Edge end: tnd.lei){
+                                                    boolean exists=false;
+                                                    for(Edge ens: tns.lei){
+                                                        if(end.s==ens.s){
+                                                            exists=true;
+                                                            break;
+                                                        }
+                                                    }
+                                                    if(!exists){
+                                                        anew++;
+                                                    }
+                                                }
+                                                for(Edge end: tnd.leo){
+                                                    boolean exists=false;
+                                                    for(Edge ens: tns.leo){
+                                                        if(end.e==ens.e){
+                                                            exists=true;
+                                                            break;
+                                                        }
+                                                    }
+                                                    if(!exists){
+                                                        anew++;
+                                                    }
+                                                }
+                                                if(anew>aechanges){
+                                                    continue;
+                                                }
+                                                
+                                                ns=tns;
+                                                nd=tnd;
+                                                break;
+                                            }
                                         }
-                                    }                                            
-                                    if(!exists){
-                                        //readd Edge
-                                        nd_ei.s.leo.add(nd_ei);
-                                        nd_ei.e.lei.add(nd_ei);
+                                        if(ns!=null) break;
                                     }
+
+
+                                    if(ns!=null){
+                                        //No cylce matche! merge ns and nd ==> delete nd
+                                        //Add edges from nd to ns
+                                        for(Edge nd_eo:nd.leo){
+                                            nd_eo.s=ns;
+                                            nd_eo.e.lei.remove(nd_eo);                                    
+                                            boolean exists=false;
+                                            for(Edge ns_eo:ns.leo){
+                                                if(ns_eo.e==nd_eo.e){
+                                                    //Edge exits
+                                                    exists=true;
+                                                    break;                                                    
+                                                }
+                                            }                                            
+                                            if(!exists){
+                                                //readd Edge
+                                                nd_eo.s.leo.add(nd_eo);
+                                                nd_eo.e.lei.add(nd_eo);
+                                            }
+                                        }
+                                        for(Edge nd_ei:nd.lei){
+                                            nd_ei.e=ns;
+                                            nd_ei.s.leo.remove(nd_ei);                                    
+                                            boolean exists=false;
+                                            for(Edge ns_ei:ns.lei){
+                                                if(ns_ei.s==nd_ei.s){
+                                                    //Edge exits
+                                                    exists=true;
+                                                    break;                                                    
+                                                }
+                                            }                                            
+                                            if(!exists){
+                                                //readd Edge
+                                                nd_ei.s.leo.add(nd_ei);
+                                                nd_ei.e.lei.add(nd_ei);
+                                            }
+                                        }
+
+
+                                        //transfer tts
+                                        for(Map.Entry<TimeText,String> e : nd.mtt.entrySet()){
+                                            ns.mtt.put(e.getKey(),e.getValue());
+                                        }
+
+                                        //remode nd
+                                        g.nodes.remove(nd);
+
+                                        this.publish(g.cloneGraph());
+
+                                        Thread.sleep(10);
+
+                                        change=true;
+                                        break;                                    
+
+                                    }
+
+
+                                    if(change) break;
                                 }
-                                
-                                
-                                //transfer tts
-                                for(Map.Entry<TimeText,String> e : nd.mtt.entrySet()){
-                                    ns.mtt.put(e.getKey(),e.getValue());
-                                }
-
-                                //remode nd
-                                g.nodes.remove(nd);
-
-                                this.publish(g.cloneGraph());
-
-                                Thread.sleep(10);
-
-                                change=true;
-                                break;                                    
-
+                                if(change) break;
                             }
-                            
-                            
                             if(change) break;
                         }
                         if(change) break;
@@ -608,7 +654,9 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                                 }
 
                             }
-                            if((ndone.size()-1) == g.nodes.size()) break; //Has soulution!!!
+                            if((ndone.size()-1) == g.nodes.size()) {
+                                break; //Has soulution!!!
+                            }
                         }
                         //Print solution
                         if((ndone.size()-1) == g.nodes.size())
@@ -632,7 +680,7 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                 }
                 
                 
-                
+                JPWordsToGraph.ltt=ltt;
                 JPWordsToGraph.graph=g;
                 JPWordsToGraph.solutions= solutions.toArray(new Solution[0]);
                 setProgress(100,"Done");                    

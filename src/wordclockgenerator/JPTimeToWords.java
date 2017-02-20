@@ -19,6 +19,9 @@ import javax.swing.table.DefaultTableModel;
  */
 public class JPTimeToWords extends javax.swing.JPanel {
     private static ArrayList<TimeText> timetextlist= new ArrayList<>();
+    public static ArrayList<TimeText> getTimeTextList(){
+        return timetextlist;
+    }
     /**
      * Creates new form JPTimeToWords
      */
@@ -358,6 +361,7 @@ public class JPTimeToWords extends javax.swing.JPanel {
         for(int i =0;i<jToutput.getModel().getRowCount();i++){
             jToutput.getModel().setValueAt(is.readObject().toString(),i, 1);  
         }
+        jToutputPropertyChange(null);
     }
         
     private static class InternDefaultTableModel extends DefaultTableModel implements Serializable{
@@ -374,7 +378,4 @@ public class JPTimeToWords extends javax.swing.JPanel {
     }
     
     
-    public static ArrayList<TimeText> getTimeTextList(){
-        return timetextlist;
-    }
 }
