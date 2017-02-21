@@ -282,7 +282,7 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                     file.write("//Word: \""+e.getKey()+"\""+ln);
                     file.write("const uint16_t word_"+cwords+"[] PROGMEM = { ");
                     file.write((lw*h+w+n.text.indexOf(e.getKey()))+", ");
-                    file.write(e.getKey().length()+" }"+ln);
+                    file.write(e.getKey().length()+" };"+ln);
                     
                     cwords++;                    
                 }
@@ -375,13 +375,46 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                 if(i%lw==0){
                     file.write("   "+ln);
                 }
-                file.write(String.format("%04d", i));                
+                String s=""+i;
+                while (s.length()<4){
+                    s=" "+s;
+                }
+                file.write(s+" /* "+resultmatrix[i/lw][i%lw]+" */");                
                 if(i<(lh*lw-1))
                 {
                     file.write(", ");            
                 }
             }
             file.write(ln+"};"+ln);
+            
+            file.write(String.join(ln, 
+                "    ",
+                "boolean ledstate["+(lh*lw)+"];",
+                "",
+                "void calcleadstate(uint8_t h, uint8_t m){",
+                "  for(uint16_t i=0;i<"+(lh*lw)+";i++){",
+                "    ledstate[i]=false;",
+                "  }",
+                "  h=h%24;",
+                "  m=m%60;",
+                "  //Read pattern Pointer",
+                "  uint8_t* p_pattern = (uint8_t*) pgm_read_word(&(time_table[h][m]));",
+                "  for(uint16_t i=0;;i++) {",
+                "    uint8_t pvalue=pgm_read_byte(&(p_pattern[i]));",
+                "    if(pvalue==0xFF){",
+                "      break;    ",
+                "    }",
+                "    //Read word Pointer",
+                "    uint16_t* p_word = (uint16_t*) pgm_read_word(&(word_table[pvalue]));",
+                "    uint16_t leds_start= pgm_read_word(&(p_word[0]));",
+                "    uint16_t leds_length= pgm_read_word(&(p_word[1]));",
+                "    for(uint16_t j=0;j<leds_length;j++){",
+                "      //Map Led Index  ",
+                "      ledstate[pgm_read_word(&(ledindexmap[leds_start+j]))]=true;  ",
+                "    }",
+                "  }",
+                "}",              
+                ""));
             
 
         } catch (Exception ex) {
