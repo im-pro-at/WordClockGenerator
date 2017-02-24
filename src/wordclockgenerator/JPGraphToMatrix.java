@@ -336,7 +336,7 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                 }
                 file.write(""+ln);
                 file.write("const uint8_t pattern_"+i+"[] PROGMEM = { ");
-                for(int j=0;j<graph.nodes.size();j++){
+                for(int j=0;j<cwords;j++){
                     if(petternlist[i].charAt(j)=='1'){
                         file.write(j+", ");
                     }
@@ -370,7 +370,9 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             }
             file.write("};"+ln);
 
-            file.write("const uint16_t ledindexmap["+(lh*lw)+"] PROGMEM = {");
+            file.write("#define NUM_LEDS "+(lh*lw)+" "+ln);
+            
+            file.write("const uint16_t ledindexmap[NUM_LEDS] PROGMEM = {");
             for(int i=0;i<lh*lw;i++){
                 if(i%lw==0){
                     file.write("   "+ln);
@@ -389,10 +391,10 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             
             file.write(String.join(ln, 
                 "    ",
-                "boolean ledstate["+(lh*lw)+"];",
+                "boolean ledstate[NUM_LEDS];",
                 "",
                 "void calcleadstate(uint8_t h, uint8_t m){",
-                "  for(uint16_t i=0;i<"+(lh*lw)+";i++){",
+                "  for(uint16_t i=0;i<NUM_LEDS;i++){",
                 "    ledstate[i]=false;",
                 "  }",
                 "  h=h%24;",
