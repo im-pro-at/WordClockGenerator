@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package wordclockgenerator;
+package at.impro.wordclockgenerator;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 /**
@@ -37,9 +38,9 @@ public class JFMain extends javax.swing.JFrame {
     private void initComponents() {
 
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        jPTimeToWords1 = new wordclockgenerator.JPTimeToWords();
-        jPWordsToGraph1 = new wordclockgenerator.JPWordsToGraph();
-        jPSolutions1 = new wordclockgenerator.JPGraphToMatrix();
+        jPTimeToWords1 = new at.impro.wordclockgenerator.JPTimeToWords();
+        jPWordsToGraph1 = new at.impro.wordclockgenerator.JPWordsToGraph();
+        jPGraphToMatrix1 = new at.impro.wordclockgenerator.JPGraphToMatrix();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenue = new javax.swing.JMenu();
         jMISave = new javax.swing.JMenuItem();
@@ -49,7 +50,7 @@ public class JFMain extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Time to Words", jPTimeToWords1);
         jTabbedPane1.addTab("Words to Graph", jPWordsToGraph1);
-        jTabbedPane1.addTab("Graph to Matrix", jPSolutions1);
+        jTabbedPane1.addTab("Graph to Matrix", jPGraphToMatrix1);
 
         jMenue.setText("File");
 
@@ -149,10 +150,10 @@ public class JFMain extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(JFMain.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
 
+        if(!System.getProperty("os.arch").contains("64")){
+            JOptionPane.showMessageDialog(null, "This Program schuld be run on Java 64bit to avoid memory Problems!");
+        }        
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -166,9 +167,9 @@ public class JFMain extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMISave;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenu jMenue;
-    private wordclockgenerator.JPGraphToMatrix jPSolutions1;
-    private wordclockgenerator.JPTimeToWords jPTimeToWords1;
-    private wordclockgenerator.JPWordsToGraph jPWordsToGraph1;
+    private at.impro.wordclockgenerator.JPGraphToMatrix jPGraphToMatrix1;
+    private at.impro.wordclockgenerator.JPTimeToWords jPTimeToWords1;
+    private at.impro.wordclockgenerator.JPWordsToGraph jPWordsToGraph1;
     private javax.swing.JTabbedPane jTabbedPane1;
     // End of variables declaration//GEN-END:variables
 }

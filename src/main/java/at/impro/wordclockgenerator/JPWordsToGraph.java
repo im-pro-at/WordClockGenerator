@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package wordclockgenerator;
+package at.impro.wordclockgenerator;
 
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
@@ -371,7 +371,7 @@ public class JPWordsToGraph extends javax.swing.JPanel {
                 float cnodes=g.nodes.size();
                 //Find maching nodes
                 emaxdelta+=2; //START + END
-                boolean change=true;
+                boolean change=true; 
                 while(change)
                 {
                     setProgress((int)(25+ 25*(1-(float)g.nodes.size()/cnodes)),"Find maching nodes..");

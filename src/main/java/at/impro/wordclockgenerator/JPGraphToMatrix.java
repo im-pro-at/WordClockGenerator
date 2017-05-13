@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package wordclockgenerator;
+package at.impro.wordclockgenerator;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -16,7 +16,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
