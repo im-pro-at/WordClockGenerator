@@ -5,12 +5,18 @@
  */
 package at.impro.wordclockgenerator;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JTable;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -22,6 +28,9 @@ public class JPTimeToWords extends javax.swing.JPanel {
     public static ArrayList<TimeText> getTimeTextList(){
         return timetextlist;
     }
+
+    private int customentries=0;
+
     /**
      * Creates new form JPTimeToWords
      */
@@ -33,20 +42,40 @@ public class JPTimeToWords extends javax.swing.JPanel {
 
             @Override
             public void insertUpdate(DocumentEvent e) {
-                recalc();        
+                recalc(false);        
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                recalc();        
+                recalc(false);        
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                recalc();        
+                recalc(false);        
             }
         });
-       recalc();
+        
+        jToutput.setDefaultRenderer(Object.class, new DefaultTableCellRenderer()
+        {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+            {
+                final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                Color color= Color.WHITE;
+                try{
+                    TimeText tt= (TimeText)table.getModel().getValueAt(row, 0);
+                    if(!tt.getText().equals(table.getModel().getValueAt(row, 1).toString()))
+                        color=Color.lightGray;
+                }
+                catch(Exception ex){}
+                if(!isSelected && !hasFocus)
+                    c.setBackground(color);
+                return c;
+            }
+        });
+
+       recalc(false);
     }
 
     /**
@@ -71,6 +100,9 @@ public class JPTimeToWords extends javax.swing.JPanel {
         jLabel4 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
         jToutput = new javax.swing.JTable();
+        jBRemoveText = new javax.swing.JButton();
+        jBAddText = new javax.swing.JButton();
+        jBclear = new javax.swing.JButton();
 
         jLabel1.setText("Minutes");
 
@@ -130,7 +162,7 @@ public class JPTimeToWords extends javax.swing.JPanel {
 
         jLabel3.setText("Arrange: [minutes], [hours] and [ampm]:");
 
-        jLabel4.setText("Output");
+        jLabel4.setText("Output    Custom Text:");
 
         jToutput.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -149,6 +181,27 @@ public class JPTimeToWords extends javax.swing.JPanel {
             }
         });
         jScrollPane3.setViewportView(jToutput);
+
+        jBRemoveText.setText("-");
+        jBRemoveText.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jBRemoveTextActionPerformed(evt);
+            }
+        });
+
+        jBAddText.setText("+");
+        jBAddText.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jBAddTextActionPerformed(evt);
+            }
+        });
+
+        jBclear.setText("clear");
+        jBclear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jBclearActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -171,15 +224,22 @@ public class JPTimeToWords extends javax.swing.JPanel {
                             .addComponent(jCBhMode, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 351, Short.MAX_VALUE))
+                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 338, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jTFArangement)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel4)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 304, Short.MAX_VALUE))
-                .addGap(0, 0, 0))
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
+                        .addComponent(jBAddText)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jBRemoveText)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jBclear)
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -188,7 +248,10 @@ public class JPTimeToWords extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(jLabel2)
-                    .addComponent(jLabel4))
+                    .addComponent(jLabel4)
+                    .addComponent(jBRemoveText)
+                    .addComponent(jBAddText)
+                    .addComponent(jBclear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
@@ -197,7 +260,7 @@ public class JPTimeToWords extends javax.swing.JPanel {
                             .addComponent(jCBhMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 376, Short.MAX_VALUE)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 367, Short.MAX_VALUE)
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel3)
@@ -244,7 +307,7 @@ public class JPTimeToWords extends javax.swing.JPanel {
         
         DefaultTableModel mtable = new InternDefaultTableModel(table,new String[]{"Hours","Text","h diff"});
         jTm.setModel(mtable);
-        recalc();        
+        recalc(false);        
     }//GEN-LAST:event_jCBmModeActionPerformed
 
     private void jCBhModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCBhModeActionPerformed
@@ -261,36 +324,62 @@ public class JPTimeToWords extends javax.swing.JPanel {
         
         DefaultTableModel mtable = new InternDefaultTableModel(table,new String[]{"Hours","Text"});
         jTh.setModel(mtable);
-        recalc();
+        recalc(false);
     }//GEN-LAST:event_jCBhModeActionPerformed
 
     private void jTmPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jTmPropertyChange
-        recalc();
+        recalc(false);
     }//GEN-LAST:event_jTmPropertyChange
 
     private void jThPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jThPropertyChange
-        recalc();
+        recalc(false);
     }//GEN-LAST:event_jThPropertyChange
 
     private void jToutputPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_jToutputPropertyChange
         ArrayList<TimeText> list= new ArrayList<>();
         for(int i =0;i<jToutput.getModel().getRowCount();i++){
-            TimeText tt = (TimeText) jToutput.getModel().getValueAt(i, 0);
-            if(jToutput.getModel().getValueAt(i, 1)!=null)
-                tt.setText(jToutput.getModel().getValueAt(i, 1).toString());
-            list.add(tt);
+            if(jToutput.getModel().getValueAt(i, 0)!=null &&  jToutput.getModel().getValueAt(i, 0).getClass() == TimeText.class)
+            {
+                TimeText tt = (TimeText) jToutput.getModel().getValueAt(i, 0);
+                try {
+                    tt=(TimeText) tt.clone();
+                    tt.setText(jToutput.getModel().getValueAt(i, 1).toString());
+                } catch (CloneNotSupportedException ex) {
+                    Logger.getLogger(JPTimeToWords.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                list.add(tt);
+            }
         }
         timetextlist= list;
     }//GEN-LAST:event_jToutputPropertyChange
 
-    private void recalc(){
+    private void jBclearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBclearActionPerformed
+        recalc(true);
+    }//GEN-LAST:event_jBclearActionPerformed
+
+    private void jBAddTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBAddTextActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jToutput.getModel();
+        model.insertRow(customentries,new Object[]{new TimeText(customentries, ""), ""});        
+        customentries++;
+        jToutputPropertyChange(null);
+    }//GEN-LAST:event_jBAddTextActionPerformed
+
+    private void jBRemoveTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBRemoveTextActionPerformed
+        if(customentries>0)
+        {
+            DefaultTableModel model = (DefaultTableModel) jToutput.getModel();
+            customentries--;
+            model.removeRow(customentries);
+        }
+        jToutputPropertyChange(null);
+    }//GEN-LAST:event_jBRemoveTextActionPerformed
+
+    private void recalc(boolean clear){
         ArrayList<TimeText> time = new ArrayList<>();
         ArrayList<String> text = new ArrayList<>();
         try {
             for(int h=0;h<24;h++){
                 for (int m=0;m<60;m++){
-                    TimeText tt= new TimeText(h, m, "");
-                    time.add(tt);
                     String minutes=jTm.getModel().getValueAt(m/getmStep(), 1).toString();
                     int hdiff=0;
                     try{
@@ -299,15 +388,38 @@ public class JPTimeToWords extends javax.swing.JPanel {
                     catch(Exception e){};                            
                     String hours=jTh.getModel().getValueAt((h+hdiff)%gethLength(), 1).toString();
                     String ampm=(h<=12)?jTh.getModel().getValueAt(gethLength(), 1).toString():jTh.getModel().getValueAt(gethLength()+1, 1).toString();
-                    text.add(jTFArangement.getText().replace("[minutes]", minutes).replace("[hours]", hours).replace("[ampm]", ampm)); //
+                    TimeText tt= new TimeText(h, m, jTFArangement.getText().replace("[minutes]", minutes).replace("[hours]", hours).replace("[ampm]", ampm));
+                    time.add(tt);                    
+                    text.add(tt.getText());
                 }
             }
-            Object[][] table= new Object[text.size()][2];
+            Object[][] table= new Object[text.size()+customentries][2];
+            for(int i=0;i<customentries;i++)
+            {
+                table[i][0]=new TimeText(i, "");
+                try{
+                    table[i][1]=jToutput.getModel().getValueAt(i, 1).toString();
+                }
+                catch(Exception ex){
+                    table[i][1]="";                    
+                }
+            }
             for(int i=0;i<text.size();i++)
             {
-                table[i][0]=time.get(i);
-                table[i][1]=text.get(i);
+                table[i+customentries][0]=time.get(i);
+                try{
+                    if(clear || ((TimeText)jToutput.getModel().getValueAt(i+customentries, 0)).getText().equals(jToutput.getModel().getValueAt(i+customentries, 1).toString()))
+                        table[i+customentries][1]=text.get(i);
+                    else
+                        table[i+customentries][1]=jToutput.getModel().getValueAt(i+customentries, 1).toString();                    
+                }
+                catch(Exception ex){
+                    table[i+customentries][1]=text.get(i);                    
+                }
             }
+            //copy:
+            
+            
             jToutput.setModel(new InternDefaultTableModel(table, new String[] {"Time","Text"}));        
         } catch (Exception e) {
 
@@ -316,6 +428,9 @@ public class JPTimeToWords extends javax.swing.JPanel {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jBAddText;
+    private javax.swing.JButton jBRemoveText;
+    private javax.swing.JButton jBclear;
     private javax.swing.JComboBox jCBhMode;
     private javax.swing.JComboBox jCBmMode;
     private javax.swing.JLabel jLabel1;
@@ -342,6 +457,7 @@ public class JPTimeToWords extends javax.swing.JPanel {
             os.writeObject(jTh.getModel().getValueAt(i, 1).toString());   
         }     
         os.writeObject(jTFArangement.getText());
+        os.writeInt(customentries);
         for(int i =0;i<jToutput.getModel().getRowCount();i++){
             os.writeObject(jToutput.getModel().getValueAt(i, 1).toString());  
         }
@@ -358,6 +474,9 @@ public class JPTimeToWords extends javax.swing.JPanel {
             jTh.getModel().setValueAt(is.readObject().toString(),i, 1);  
         }
         jTFArangement.setText((String)is.readObject());
+        customentries=is.readInt();
+        System.out.println(customentries);
+        recalc(true);
         for(int i =0;i<jToutput.getModel().getRowCount();i++){
             jToutput.getModel().setValueAt(is.readObject().toString(),i, 1);  
         }

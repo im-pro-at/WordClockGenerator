@@ -47,6 +47,7 @@ public class JFMain extends javax.swing.JFrame {
         jMILoad = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Word Clock Generator © im-pro.at");
 
         jTabbedPane1.addTab("Time to Words", jPTimeToWords1);
         jTabbedPane1.addTab("Words to Graph", jPWordsToGraph1);

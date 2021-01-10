@@ -331,7 +331,10 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                 file.write(patternttmap.get(petternlist[i]).get(0).getText());
                 file.write("\" ");
                 for(TimeText tt : patternttmap.get(petternlist[i])){
-                    file.write(tt.getTimeString()+" ");                
+                    if(tt.isTime())
+                        file.write(tt.getTimeString()+" ");                
+                    else
+                        file.write(tt.getIndexString()+" ");                
                 }
                 file.write(""+ln);
                 file.write("const uint8_t pattern_"+i+"[] PROGMEM = { ");
@@ -345,8 +348,18 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             //Generate main Time table:
             file.write("//Main Time Table: "+ln);
             TimeText[][] mtt= new TimeText[24][60];
+            //get CustomTextmax index
+            int cmax=0;
             for(TimeText tt: ltt){
-                mtt[tt.getH()][tt.getM()]=tt;
+                if(!tt.isTime() && cmax<tt.getIndex()+1)
+                    cmax=tt.getIndex()+1;
+            }
+            TimeText[] ctt= new TimeText[cmax];
+            for(TimeText tt: ltt){
+                if(tt.isTime())
+                    mtt[tt.getH()][tt.getM()]=tt;
+                else
+                    ctt[tt.getIndex()]=tt;
             }
             HashMap<String,Integer> patterntoIndex = new FastHashMap<>();
             for(int i=0;i<petternlist.length;i++){
@@ -369,9 +382,19 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             }
             file.write("};"+ln);
 
-            file.write("#define NUM_LEDS "+(lh*lw)+" "+ln);
+            if(cmax>0)
+            {
+                file.write("const uint8_t* const custom_table["+cmax+"] PROGMEM = {"+ln);
+                for(int i=0;i<cmax;i++){
+                    file.write("pattern_"+patterntoIndex.get(ttpatternmap.get(ctt[i])));                                
+                    if(i<cmax-1){
+                        file.write(", ");
+                    }
+                }
+                file.write(ln+"};"+ln);
+            }
             
-            file.write("const uint16_t ledindexmap[NUM_LEDS] PROGMEM = {");
+            file.write("const uint16_t ledindexmap["+(lh*lw)+"] PROGMEM = {");
             for(int i=0;i<lh*lw;i++){
                 if(i%lw==0){
                     file.write("   "+ln);
@@ -388,18 +411,16 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
             }
             file.write(ln+"};"+ln);
             
+            file.write("#define NUM_LEDS "+(lh*lw)+" //change if you habe more LEDS"+ln); 
+            
             file.write(String.join(ln, 
-                "    ",
+                "",
                 "boolean ledstate[NUM_LEDS];",
                 "",
-                "void calcleadstate(uint8_t h, uint8_t m){",
-                "  for(uint16_t i=0;i<NUM_LEDS;i++){",
-                "    ledstate[i]=false;",
+                "void setPattern(uint8_t* p_pattern){",
+                "  for(uint16_t i=0;i<"+(lh*lw)+";i++){",
+                "    ledstate[pgm_read_word(&(ledindexmap[i]))]=false;",
                 "  }",
-                "  h=h%24;",
-                "  m=m%60;",
-                "  //Read pattern Pointer",
-                "  uint8_t* p_pattern = (uint8_t*) pgm_read_word(&(time_table[h][m]));",
                 "  for(uint16_t i=0;;i++) {",
                 "    uint8_t pvalue=pgm_read_byte(&(p_pattern[i]));",
                 "    if(pvalue==0xFF){",
@@ -414,9 +435,24 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                 "      ledstate[pgm_read_word(&(ledindexmap[leds_start+j]))]=true;  ",
                 "    }",
                 "  }",
+                "}",
+                "",
+                "void setTimeText(uint8_t h, uint8_t m){",
+                "  //Read pattern Pointer",
+                "  setPattern((uint8_t*) pgm_read_word(&(time_table[h%24][m%60])));",
                 "}",              
-                ""));
-            
+                "")
+            );
+            if(cmax>0)
+            {
+                file.write(String.join(ln, 
+                    "void setCostumText(uint8_t i){",
+                    "  //Read pattern Pointer",
+                    "  setPattern((uint8_t*) pgm_read_word(&(custom_table[i%"+cmax+"])));",
+                    "}",              
+                    "")
+                );
+            }
 
         } catch (Exception ex) {
             Logger.getLogger(JPGraphToMatrix.class.getName()).log(Level.SEVERE, null, ex);
