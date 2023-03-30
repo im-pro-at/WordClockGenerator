@@ -427,7 +427,7 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                 "      break;    ",
                 "    }",
                 "    //Read word Pointer",
-                "    uint16_t* p_word = (uint16_t*) pgm_read_word(&(word_table[pvalue]));",
+                "    uint16_t* p_word = (uint16_t*) pgm_read_ptr(&(word_table[pvalue]));",
                 "    uint16_t leds_start= pgm_read_word(&(p_word[0]));",
                 "    uint16_t leds_length= pgm_read_word(&(p_word[1]));",
                 "    for(uint16_t j=0;j<leds_length;j++){",
@@ -439,16 +439,16 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
                 "",
                 "void setTimeText(uint8_t h, uint8_t m){",
                 "  //Read pattern Pointer",
-                "  setPattern((uint8_t*) pgm_read_word(&(time_table[h%24][m%60])));",
+                "  setPattern((uint8_t*) pgm_read_ptr(&(time_table[h%24][m%60])));",
                 "}",              
                 "")
             );
             if(cmax>0)
             {
                 file.write(String.join(ln, 
-                    "void setCostumText(uint8_t i){",
+                    "void setCustomText(uint8_t i){",
                     "  //Read pattern Pointer",
-                    "  setPattern((uint8_t*) pgm_read_word(&(custom_table[i%"+cmax+"])));",
+                    "  setPattern((uint8_t*) pgm_read_ptr(&(custom_table[i%"+cmax+"])));",
                     "}",              
                     "")
                 );
