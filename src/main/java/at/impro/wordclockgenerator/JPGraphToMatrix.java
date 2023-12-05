@@ -237,7 +237,7 @@ public class JPGraphToMatrix extends javax.swing.JPanel {
     private void jBExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBExportActionPerformed
         final JFileChooser fc = new JFileChooser();
         fc.showSaveDialog(this);
-        String ln=java.security.AccessController.doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
+        String ln= System.lineSeparator();
         try (Writer file = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fc.getSelectedFile()), "utf-8"))) {
             int lh=resultmatrix.length;
             int lw=resultmatrix[0].length;
